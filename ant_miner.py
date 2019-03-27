@@ -42,6 +42,7 @@ class AntMiner:
             best_rule = copy.deepcopy(previous_rule)
 
             ant_index = 0
+            converg_quality_index = 0
             converg_test_index = 1
 
             terms_mgr = TermsManager(self.dataset, self.min_case_per_rule)
@@ -76,13 +77,14 @@ class AntMiner:
                 f.write('\n\n>>>>>>>>>>>>>>> ITERATION ' + repr(idx_i))
                 f.close()
 
-                if ant_index >= self.no_of_ants or converg_test_index >= self.no_rules_converg:
+                if ant_index >= self.no_of_ants or converg_test_index >= self.no_rules_converg or converg_quality_index >= self.no_rules_converg:
                     f = open(i_log_file, "a+")
                     f.write('\n\n==================== END Internal Loop')
                     f.write('\n  - no_of_ants = ' + repr(self.no_of_ants))
                     f.write('\n  - ant_index = ' + repr(ant_index))
                     f.write('\n  - no_rules_converg = ' + repr(self.no_rules_converg))
                     f.write('\n  - converg_test_index = ' + repr(converg_test_index))
+                    f.write('\n  - converg_quality_index = ' + repr(converg_quality_index))
                     f.write('\n  - Number of iterations: ' + repr(idx_i))
                     f.close()
                     break
@@ -126,13 +128,19 @@ class AntMiner:
                 f.write('\n-Quality: ' + repr(best_rule.quality))
                 f.close()
 
-                if current_rule.equals(previous_rule):
+                if current_rule.quality == 0.0:
+                    converg_quality_index += 1
+                    f = open(i_log_file, "a+")
+                    f.write('\n\n!!! Constructed Rule has quality = 0')
+                    f.close()
+                elif current_rule.equals(previous_rule):
                     converg_test_index += 1
                     f = open(i_log_file, "a+")
                     f.write('\n\n!!! Constructed Rule converged')
                     f.close()
                 else:
                     converg_test_index = 1
+                    converg_quality_index = 1
                     if current_rule.quality > best_rule.quality:
                         best_rule = copy.deepcopy(current_rule)
                         f = open(i_log_file, "a+")
@@ -143,9 +151,25 @@ class AntMiner:
                 previous_rule = copy.deepcopy(current_rule)
                 ant_index += 1
 
-            self.discovered_rule_list.append(best_rule)
-            self.dataset.data_updating(best_rule.covered_cases)
-            no_of_remaining_cases = len(self.dataset.data)
+            if best_rule.quality == 0.0:
+                # just for log register
+                f = open(log_file, "a+")
+                f.write('\n\n!!! Algorithm temination: all generated rules have quality=0\n')
+                f.write('\n>> Internal Loop Results:')
+                f.write('\n>Best rule:')
+                f.close()
+                best_rule.print_txt(log_file, 'Class')
+                f = open(log_file, "a+")
+                f.write('\n- number of covered cases: ' + repr(len(best_rule.covered_cases)))
+                f.write('\n\n>> External Loop Information:')
+                f.write('\n>Number of rules on discovered_rule_list: ' + repr(len(self.discovered_rule_list)))
+                f.write('\n>No_of_remaining_cases: ' + repr(no_of_remaining_cases))
+                f.close()
+                break
+            else:
+                self.discovered_rule_list.append(best_rule)
+                self.dataset.data_updating(best_rule.covered_cases)
+                no_of_remaining_cases = len(self.dataset.data)
 
             # just for log register
             f = open(log_file, "a+")
@@ -178,27 +202,24 @@ class AntMiner:
             r.print_txt(ac_log_file, 'Class')
 
         # generating rule for remaining cases
-        if no_of_remaining_cases > 0:
-            rule = Rule(self.dataset)
-            rule.general_rule()
+        rule = Rule(self.dataset)
+        rule.general_rule()
 
-            f = open(ac_log_file, "a+")
-            f.write('\n\n=> GENERAL RULE: from remaining uncovered cases')
-            f.close()
-            rule.print_txt(ac_log_file, 'Class')
+        f = open(ac_log_file, "a+")
+        f.write('\n\n=> GENERAL RULE: from remaining uncovered cases')
+        f.close()
+        rule.print_txt(ac_log_file, 'Class')
 
-            self.discovered_rule_list.append(rule)
+        if rule.consequent is None:
+            print("Error: no class chosen")
 
-            f = open(ac_log_file, "a+")
-            f.write('\n\n=> FINAL LIST OF DISCOVERED RULES:')
-            f.close()
-            for r in self.discovered_rule_list:
-                r.print_txt(ac_log_file, 'Class')
+        self.discovered_rule_list.append(rule)
 
-        else:
-            f = open(ac_log_file, "a+")
-            f.write('\n\n!!! No general rule created: there are no remaining uncovered cases')
-            f.close()
+        f = open(ac_log_file, "a+")
+        f.write('\n\n=> FINAL LIST OF DISCOVERED RULES:')
+        f.close()
+        for r in self.discovered_rule_list:
+            r.print_txt(ac_log_file, 'Class')
 
         return
 
@@ -212,9 +233,9 @@ class AntMiner:
 
         for case in range(all_cases):  # for each new case
             chosen_class = None
-            compatibility = True
 
             for rule in rules:  # sequential rule compatibility test
+                compatibility = True
 
                 for attr, value in rule.antecedent.items():
                     if value != test_dataset.data[case, test_dataset.col_index[attr]]:

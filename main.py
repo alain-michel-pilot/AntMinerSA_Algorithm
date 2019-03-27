@@ -5,7 +5,6 @@ from sklearn.metrics import accuracy_score
 from dataset import Dataset
 from ant_miner import AntMiner
 from k_fold_crossvalidation import k_fold
-from data_preprocessing import data_analysis
 
 
 def main():
@@ -23,11 +22,9 @@ def main():
     data = pd.read_csv('datasets/tic-tac-toe_data.txt', delimiter=',', header=None, names=header, index_col=False)
     class_attr = 'Class'
 
-    #data = data_analysis(data)
-
     # K-FOLD CROSS-VALIDATION SETTINGS
     k = 10
-    training_folders, test_folders = k_fold(data, class_attr, n_splits=k, stratified=False)
+    training_folders, test_folders = k_fold(data, class_attr, n_splits=k, stratified=True)
 
     # GLOBAL VARIABLES
     predictive_accuracy = []

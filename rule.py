@@ -9,7 +9,7 @@ class Rule:
         self.consequent = None
         self.covered_cases = list(range(len(dataset.data)))
         self.no_covered_cases = len(dataset.data)
-        self.quality = 0
+        self.quality = 0.0
         self.__dataset = dataset
 
     def __set_consequent(self):
@@ -58,14 +58,14 @@ class Rule:
         den1 = (tp + fn)
         den2 = (fp + tn)
         if den1 == 0:
-            self.quality = 0
+            self.quality = 0.0
         elif den2 == 0:
-            self.quality = 1
+            self.quality = 1.0
         else:
             self.quality = (tp / den1) * (tn / den2)
 
         # just for log register
-        if self.quality == 1 or 0:
+        if self.quality == 1 or self.quality == 0 or self.quality == 0.0:
             q_log_file = "log_rule-quality-analisys.txt"
             f = open(q_log_file, "a+")
             f.write('\n\n\n==============================================================================================================')
@@ -307,21 +307,25 @@ class Rule:
     def general_rule(self):
 
         class_col = self.__dataset.col_index[self.__dataset.class_attr]
-        classes = self.__dataset.data[:, class_col]
+        if len(self.__dataset.data) == 0:
+            original_data = self.__dataset.get_original_data()
+            classes = original_data[:, class_col]
+        else:
+            classes = self.__dataset.data[:, class_col]
 
         class_freq = dict(collections.Counter(classes))
 
         max_freq = 0
-        class_chosen = None
-        for w in class_freq:  # other way: class_chosen <= max(class_freq[])
-            if class_freq[w] > max_freq:
-                class_chosen = w
-                max_freq = class_freq[w]
+        chosen_class = None
+        for w, freq in class_freq.items():  # other way: class_chosen <= max(class_freq[])
+            if freq > max_freq:
+                chosen_class = w
+                max_freq = freq
 
         self.covered_cases = []
         self.no_covered_cases = None
         self.quality = None
-        self.consequent = class_chosen
+        self.consequent = chosen_class
 
         if self.consequent is None:
             print("!! Error: Rule created with no consequent")

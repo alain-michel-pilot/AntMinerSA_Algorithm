@@ -10,6 +10,7 @@ class Dataset:
         self.attr_values = {}
         self.col_index = {}
         self.data = None
+        self.__original_data = None
 
         self.__constructor(data)
 
@@ -30,6 +31,7 @@ class Dataset:
             self.col_index[col_names[idx]] = data.columns.get_loc(col_names[idx])
 
         self.data = np.array(data.values)
+        self.__original_data = np.array(data.values)
 
         return
 
@@ -50,3 +52,6 @@ class Dataset:
 
     def get_real_classes(self):
         return list(self.data[:, self.col_index[self.class_attr]])
+
+    def get_original_data(self):
+        return self.__original_data
