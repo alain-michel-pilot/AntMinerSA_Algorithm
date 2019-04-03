@@ -120,79 +120,16 @@ class TermsManager:
 
         return False
 
-    def new_sort_term(self):
+    def sort_term(self):
 
         probabilities = self.__get_probabilities()
-
-        c_log_file = "log_rule-construct.txt"
-        f = open(c_log_file, "a+")
-        f.write('\n\n>> New sort_term Function <<')
-        f.write('\n\n> Probabilities: ' + repr(probabilities))
-        f.close()
-
         probs = [prob[0] for prob in probabilities]
         choice_idx = np.random.choice(len(probabilities), size=1, p=probs)[0]
 
-        f = open(c_log_file, "a+")
-        f.write('\n\n> Index sorted from probabilities list: ' + repr(choice_idx))
-        f.write('\n\n> Term sorted: ' + repr(probabilities[choice_idx]))
-        f.close()
-
         return probabilities[choice_idx][1]
-
-    def sort_term(self):
-        c_log_file = "log_rule-construct.txt"
-        f = open(c_log_file, "a+")
-        f.write('\n\n> TERM SORT:')
-        f.close()
-
-        prob_normalization = self.__get_prob_accum()
-        number_sort = np.random.rand()
-        term = None
-
-        f = open(c_log_file, "a+")
-        f.write('\n- Sorted random number: ' + repr(number_sort))
-        f.write('\n\nSorting...:')
-        f.close()
-
-        term_idx = 0
-        prob_accum = 0
-        sorted = False
-        for attr, values in self.__attr_values.items():
-            if self.__availability[attr]:
-                for value in values:
-                    prob = (self.__heuristic_table[attr][value] * self.__pheromone_table[attr][value]) / prob_normalization
-                    prob_accum += prob
-
-                    term_idx += 1
-                    f = open(c_log_file, "a+")
-                    f.write('\n-Term '+repr(term_idx)+': Term_prob='+repr(prob)+' Accum_Prob=' + repr(prob_accum))
-                    f.close()
-                    if prob == 0:
-                        f = open(c_log_file, "a+")
-                        f.write('   >>> PROB=0: heuristic='+repr(self.__heuristic_table[attr][value])+' pheromone='+repr(self.__pheromone_table[attr][value]))
-                        f.close()
-
-                    if number_sort <= prob_accum:
-                        term = self.__terms[attr][value]
-                        sorted = True
-                        break
-
-            if sorted:
-                break
-
-        f = open(c_log_file, "a+")
-        f.write('\n\n-> Term Sorted: Term ' + repr(term_idx))
-        f.close()
-
-        return term
 
     def update_availability(self, attr):
         self.__availability[attr] = False
-        c_log_file = "log_rule-construct.txt"
-        f = open(c_log_file, "a+")
-        f.write('\n=> Attribute availability: ' + repr(attr) + '=' + repr(self.__availability[attr]))
-        f.close()
         return
 
     def get_cases(self, antecedent):

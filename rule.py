@@ -33,7 +33,7 @@ class Rule:
 
         return
 
-    def __set_quality(self, idx_e, idx_i, p):
+    def __set_quality(self):
 
         tp = 0
         tn = 0
@@ -64,162 +64,32 @@ class Rule:
         else:
             self.quality = (tp / den1) * (tn / den2)
 
-        # just for log register
-        if self.quality == 1 or self.quality == 0 or self.quality == 0.0:
-            q_log_file = "log_rule-quality-analisys.txt"
-            f = open(q_log_file, "a+")
-            f.write('\n\n\n==============================================================================================================')
-            f.write('\n=============== RULE QUALITY ANALISYS ========================================================================')
-            f.write('\n==============================================================================================================')
-            f.write('\n\n=> Code reference:')
-            f.write('\n- idx_e: ' + repr(idx_e))
-            f.write('\n- idx_i: ' + repr(idx_i))
-            f.write('\n- pruning: ' + repr(p))
-            f.write('\n\n=> Quality calculation info:')
-            f.write('\n- Quality: ' + repr(self.quality))
-            f.write('\n- TP: ' + repr(tp))
-            f.write('\n- FP: ' + repr(fp))
-            f.write('\n- FN: ' + repr(fn))
-            f.write('\n- TN: ' + repr(tn) + '\n')
-            f.close()
-            self.print_txt(q_log_file, 'Class')
-
-            array_log_file = "log_rule-quality-analisys_array-e" + str(idx_e) + "i" + str(idx_i) + "p" + str(p) + ".txt"
-            f = open(q_log_file, "a+")
-            f.write('\n- covered cases: ' + repr(self.covered_cases))
-            f.write('\n- number of covered cases: ' + repr(self.no_covered_cases))
-            f.write('\n\n>> DATASET USED FOR CALCULATION: ' + repr(array_log_file) + ' file <=')
-            f.close()
-            np.savetxt(array_log_file, self.__dataset.data, fmt='%5s')
-
         return
 
-    def construct(self, terms_mgr, min_case_per_rule, idx_e, idx_i):
-        c_log_file = "log_rule-construct.txt"
-        f = open(c_log_file, "a+")
-        f.write('\n\n\n=============== RULE CONSTRUCTION LOOP ======================================================================')
-        f.write('\n> Stopping condition: rule cover less than minimum cases or there is no more attributes to be added')
-        f.write('\n> Sequential construction: Sort a term to be added to rule > check number of covered cases ')
-        f.write('\n> IF Stopping condition: set rule consequent')
-        f.write('\n=============================================================================================================')
-        f.write('\n EXTERNAL LOOP ITERATION ' + repr(idx_e))
-        f.write('\n INTERNAL LOOP ITERATION ' + repr(idx_i))
-        f.close()
-        idx = 0
+    def construct(self, terms_mgr, min_case_per_rule):
 
         # ANTECEDENT CONSTRUCTION
-        while True:
-            idx += 1
-            f = open(c_log_file, "a+")
-            f.write('\n\n>>>>>>>>>>>>>>> ITERATION ' + repr(idx))
-            f.close()
-            f = open(c_log_file, "a+")
-            f.write('\n> List_of_terms size: ' + repr(terms_mgr.size()))
-            f.write('\n\n==> CURRENT RULE:')
-            f.close()
-            self.print_txt(c_log_file, 'Class')
+        while terms_mgr.available():
 
-            if not terms_mgr.available():
-                f = open(c_log_file, "a+")
-                f.write('\n\n=============== END CONSTRUCTION')
-                f.write('\n> Condition: empty terms list')
-                f.write('\n   - current_list_of_terms size = ' + repr(terms_mgr.size()))
-                f.write('\n   - iteration number = ' + repr(idx))
-                f.close()
-                break
-
-            term = terms_mgr.new_sort_term()
-            if term is None:
-                print("Error: sorted term is None")
+            term = terms_mgr.sort_term()
             covered_cases = list(set(term.covered_cases) & set(self.covered_cases))
-
-            f = open(c_log_file, "a+")
-            f.write('\n\n==> TERM TO BE ADDED: Attribute='+repr(term.attribute)+' Value='+repr(term.value))
-            f.write('\n- Current rule covered cases: ' + repr(self.covered_cases))
-            f.write('\n- Sorted term covered cases: ' + repr(term.covered_cases))
-            f.write('\n- Intersection covered cases: ' + repr(covered_cases))
-            f.write('\n- Number of intersection covered cases: ' + repr(len(covered_cases)))
-            f.close()
 
             if len(covered_cases) >= min_case_per_rule:
                 self.antecedent[term.attribute] = term.value
                 self.covered_cases = covered_cases
                 self.no_covered_cases = len(self.covered_cases)
                 terms_mgr.update_availability(term.attribute)
-
-                f = open(c_log_file, "a+")
-                f.write('\n\n==> NEW CONSTRUCTED RULE:')
-                f.close()
-                self.print_txt(c_log_file, 'Class')
             else:
-                f = open(c_log_file, "a+")
-                f.write('\n\n=============== END CONSTRUCTION')
-                f.write('\n> Condition: new rule doesnt cover minimum cases')
-                f.write('\n   - current_list_of_terms size = ' + repr(terms_mgr.size()))
-                f.write('\n   - iteration number = ' + repr(idx))
-                f.close()
                 break
 
-        # CONSEQUENT SELECTION
         self.__set_consequent()
-        if self.consequent is None:
-            print("!! Error: Rule created with no consequent")
-
-        # SET QUALITY
-        self.__set_quality(idx_e, idx_i, p=False)
-
-        f = open(c_log_file, "a+")
-        f.write('\n\n>>> FINAL RULE ')
-        f.close()
-        self.print_txt(c_log_file, 'Class')
-        f = open(c_log_file, "a+")
-        f.write('\n-no_covered_cases: ' + repr(self.no_covered_cases))
-        f.write('\n-quality: ' + repr(self.quality))
-        f.write('\n\n> Number of iterations: ' + repr(idx))
-        f.close()
+        self.__set_quality()
 
         return
 
-    def prune(self, terms_mgr, idx_e, idx_i):
-        p_log_file = "log_rule-pruning-fnc.txt"
-        f = open(p_log_file, "a+")
-        f.write('\n\n\n================== RULE PRUNING LOOP =========================================================================')
-        f.write('\n> Stopping condition: pruned rule quality be less than best quality so far or if pruned rule antecedent has just one term')
-        f.write('\n> Receives constructed rule > drops each term on antecedent, sequentially from first to last > each term dropped consists on another rule > new pruned rule is the one of higher quality ')
-        f.write('\n> IF no new rules have higher quality than the new pruned rule, or if new pruned rule has oly one term in the antecedent > returns pruned rule')
-        f.write('\n==============================================================================================================')
-        f.write('\n EXTERNAL LOOP ITERATION ' + repr(idx_e))
-        f.write('\n INTERNAL LOOP ITERATION ' + repr(idx_i))
-        f.write('\n\n> RULE TO BE PRUNED :')
-        f.close()
-        self.print_txt(p_log_file, 'Class')
-        f = open(p_log_file, "a+")
-        f.write('\n-Number of covered cases: ' + repr(self.no_covered_cases))
-        f.write('\n-Quality: ' + repr(self.quality))
-        f.close()
+    def prune(self, terms_mgr):
 
-        idx = 0
-        while True:
-            idx += 1
-            f = open(p_log_file, "a+")
-            f.write('\n\n>>>>>>>>>>>>>>> ITERATION ' + repr(idx))
-            f.close()
-
-            if len(self.antecedent) <= 1:
-                f = open(p_log_file, "a+")
-                f.write('\n\n==> BREAK LOOP:')
-                f.write('\n> Condition: pruned rule antecedent = 1')
-                f.close()
-                break
-
-            f = open(p_log_file, "a+")
-            f.write('\n\n==> CURRENT RULE :')
-            f.close()
-            self.print_txt(p_log_file, 'Class')
-            f = open(p_log_file, "a+")
-            f.write('\n\n==> TERMS DROPPING PROCEDURE:')
-            f.close()
-
+        while len(self.antecedent) > 1:
             # current rule attributes
             current_antecedent = self.antecedent.copy()
             current_consequent = self.consequent
@@ -229,34 +99,17 @@ class Rule:
             # Iteratively removes one attribute from current antecedent
             best_attr = None
             best_quality = current_quality
+
             for attr in current_antecedent:
-
-                f = open(p_log_file, "a+")
-                f.write('\n\n>>> TERM: ')
-                f.write('\n\n> Term_2b_dropped: Attribute=' + repr(attr) + ' Value=' + repr(current_antecedent[attr]))
-                f.close()
-
                 # new rule attributes
                 self.antecedent.pop(attr, None)
                 self.covered_cases = terms_mgr.get_cases(self.antecedent)
                 self.__set_consequent()
-                self.__set_quality(idx_e, idx_i, p=True)
-
-                f = open(p_log_file, "a+")
-                f.write('\n\n> Pruned Rule:')
-                f.close()
-                self.print_txt(p_log_file, 'Class')
-                f = open(p_log_file, "a+")
-                f.write('\n-Number of covered cases: ' + repr(len(self.covered_cases)))
-                f.write('\n-Quality: ' + repr(self.quality))
-                f.close()
+                self.__set_quality()
 
                 if self.quality >= best_quality:
                     best_attr = attr
                     best_quality = self.quality
-                    f = open(p_log_file, "a+")
-                    f.write('\n\n!!! Improvement: Best attribute to be removed so far')
-                    f.close()
 
                 # restore current rule attributes
                 self.antecedent = current_antecedent.copy()
@@ -265,25 +118,13 @@ class Rule:
                 self.quality = current_quality
 
             if best_attr is None:
-                f = open(p_log_file, "a+")
-                f.write('\n\n==> BREAK LOOP:')
-                f.write('\n> Condition: best quality of new pruned rules < current rule quality')
-                f.close()
                 break
             else:  # save best pruned rule
                 self.antecedent.pop(best_attr, None)
                 self.covered_cases = terms_mgr.get_cases(self.antecedent)
                 self.no_covered_cases = len(self.covered_cases)
                 self.__set_consequent()
-                self.__set_quality(idx_e, idx_i, p=True)
-
-        f = open(p_log_file, "a+")
-        f.write('\n\n================== END PRUNING FUNCTION LOOP')
-        f.write('\n> Condition: ')
-        f.write('\n  - Number of iterations: ' + repr(idx))
-        f.write('\n\n> Final Pruned Rule:')
-        f.close()
-        self.print_txt(p_log_file, 'Class')
+                self.__set_quality()
 
         return
 
@@ -327,9 +168,6 @@ class Rule:
         self.quality = None
         self.consequent = chosen_class
 
-        if self.consequent is None:
-            print("!! Error: Rule created with no consequent")
-
         return
 
     def print(self, class_attr):
@@ -355,13 +193,13 @@ class Rule:
         qtd_of_terms = len(antecedent_attrs)
 
         f = open(file, "a+")
-        f.write('\n*RULE:   IF { ')
+        f.write('\nIF ')
         for t in range(0, qtd_of_terms):
             f.write(repr(antecedent_attrs[t]) + ' = ' + repr(self.antecedent[antecedent_attrs[t]]))
             if t < qtd_of_terms - 1:
                 f.write(' AND ')
 
-        f.write(' } THAN { ' + repr(class_attr) + ' = ' + repr(self.consequent) + ' }')
+        f.write(' THAN ' + repr(class_attr) + ' = ' + repr(self.consequent))
         f.close()
 
         return
