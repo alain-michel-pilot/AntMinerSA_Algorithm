@@ -18,8 +18,8 @@ def main():
     # INPUT: DATASET AND CLASS ATTRIBUTE NAME
     log_file = "log_main.txt"
     ac_log_file = "log_accuracy-measure.txt"
-    header = list(pd.read_csv('datasets/tic-tac-toe_header.txt', delimiter=','))
-    data = pd.read_csv('datasets/tic-tac-toe_data.txt', delimiter=',', header=None, names=header, index_col=False)
+    header = list(pd.read_csv('datasets/car_header.txt', delimiter=','))
+    data = pd.read_csv('datasets/car.data.txt', delimiter=',', header=None, names=header, index_col=False)
     class_attr = 'Class'
 
     # K-FOLD CROSS-VALIDATION SETTINGS
