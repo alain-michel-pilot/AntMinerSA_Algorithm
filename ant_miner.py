@@ -1,17 +1,31 @@
 import copy
+import pandas as pd
+
+from user_inputs import UserInputs
 from terms_manager import TermsManager
 from rule import Rule
+from dataset import Dataset
 
 
-class AntMiner:
+class AntMinerSA:
 
-    def __init__(self, dataset, no_of_ants, min_case_per_rule, max_uncovered_cases, no_rules_converg):
-        self.dataset = dataset
+    def __init__(self, no_of_ants, min_case_per_rule, max_uncovered_cases, no_rules_converg):
+        self.dataset = None
         self.no_of_ants = no_of_ants
         self.min_case_per_rule = min_case_per_rule
         self.max_uncovered_cases = max_uncovered_cases
         self.no_rules_converg = no_rules_converg
         self.discovered_rule_list = []
+
+    def read_data(self, ignore=None):  # use id_col_name in preprocessing: unify non-unique cases
+
+        header = list(pd.read_csv(UserInputs.header_path, delimiter=','))
+        data = pd.read_csv(UserInputs.data_path, delimiter=',', header=None, names=header, index_col=False)
+        data.reset_index()
+
+        self.dataset = Dataset(data)
+
+        return
 
     def fit(self):
         no_of_remaining_cases = len(self.dataset.data)
