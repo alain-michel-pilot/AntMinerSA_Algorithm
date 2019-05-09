@@ -7,10 +7,10 @@ class Rule:
     def __init__(self, dataset):
         self.antecedent = {}
         self.consequent = None
-        self.covered_cases = list(range(len(dataset.data)))
-        self.no_covered_cases = len(dataset.data)
+        self.covered_cases = dataset.get_all_cases_index()
+        self.no_covered_cases = len(self.covered_cases)
         self.quality = 0.0
-        self.__dataset = dataset
+        self._dataset = dataset
 
     def __set_consequent(self):
 
