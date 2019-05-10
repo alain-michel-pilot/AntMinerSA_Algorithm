@@ -16,9 +16,23 @@ class AntMinerSA:
         self.no_rules_converg = no_rules_converg
 
         self.discovered_rule_list = []
-        self._dataset = None
-        self._terms_manager = None
+        self._Dataset = None
+        self._TermsManager = None
         self._no_of_uncovered_cases = None
+
+    def _global_stopping_condition(self):
+        if self._no_of_uncovered_cases < self.max_uncovered_cases:
+            return True
+        return False
+
+    def _local_stopping_condition(self, ant_index, converg_test_index, converg_quality_index):
+        if ant_index >= self.no_of_ants:
+            return True
+        elif converg_test_index >= self.no_rules_converg:
+            return True
+        elif converg_quality_index >= self.no_rules_converg:
+            return True
+        return False
 
     def read_data(self,
                   data_path=UserInputs.data_path,
@@ -31,16 +45,16 @@ class AntMinerSA:
         header = list(pd.read_csv(header_path, delimiter=','))
         data = pd.read_csv(data_path, delimiter=',', header=None, names=header, index_col=False)
         data.reset_index()
-        self._dataset = Dataset(data, attr_survival_name, attr_event_name, attr_id_name, attr_to_ignore)
+        self._Dataset = Dataset(data, attr_survival_name, attr_event_name, attr_id_name, attr_to_ignore)
 
         return
 
     def fit(self):
         # Initialization
-        self._terms_manager = TermsManager(self._dataset, self.min_case_per_rule)
-        self._no_of_uncovered_cases = self._dataset.get_no_of_uncovered_cases()
+        self._TermsManager = TermsManager(self._Dataset, self.min_case_per_rule)
+        self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
 
-        while self._no_of_uncovered_cases > self.max_uncovered_cases:
+        while not self._global_stopping_condition():
 
             # local variables
             ant_index = 0
@@ -48,16 +62,14 @@ class AntMinerSA:
             converg_test_index = 1
 
             # Initialize rules
-            previous_rule = Rule(self._dataset)
+            previous_rule = Rule(self._Dataset)
             best_rule = copy.deepcopy(previous_rule)
 
-            while True:
-                if ant_index >= self.no_of_ants or converg_test_index >= self.no_rules_converg or converg_quality_index >= self.no_rules_converg:
-                    break
+            while not self._local_stopping_condition(ant_index, converg_test_index, converg_quality_index):
 
-                current_rule = Rule(self._dataset)
-                current_rule.construct(self._terms_manager, self.min_case_per_rule)
-                current_rule.prune(self._terms_manager)
+                current_rule = Rule(self._Dataset)
+                current_rule.construct(self._TermsManager, self.min_case_per_rule)
+                current_rule.prune(self._TermsManager)
 
                 if current_rule.quality == 0.0:
                     converg_quality_index += 1
@@ -69,7 +81,7 @@ class AntMinerSA:
                     if current_rule.quality > best_rule.quality:
                         best_rule = copy.deepcopy(current_rule)
 
-                self._terms_manager.pheromone_updating(current_rule.antecedent, current_rule.quality)
+                self._TermsManager.pheromone_updating(current_rule.antecedent, current_rule.quality)
                 previous_rule = copy.deepcopy(current_rule)
                 ant_index += 1
 
@@ -77,12 +89,12 @@ class AntMinerSA:
                 break
             else:
                 self.discovered_rule_list.append(best_rule)
-                self._dataset.update_covered_cases(best_rule.covered_cases)
-                self._no_of_uncovered_cases = self._dataset.get_no_of_uncovered_cases()
+                self._Dataset.update_covered_cases(best_rule.covered_cases)
+                self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
         # END OF WHILE (AVAILABLE_CASES > MAX_UNCOVERED_CASES)
 
         # generating rule for remaining cases
-        general_rule = Rule(self._dataset)
+        general_rule = Rule(self._Dataset)
         general_rule.general_rule()
         self.discovered_rule_list.append(general_rule)
 

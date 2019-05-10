@@ -6,7 +6,7 @@ from user_inputs import UserInputs
 class Heuristics:
 
     def __init__(self, dataset, heuristic_method=UserInputs.heuristic_method):
-        self._dataset = dataset
+        self._Dataset = dataset
         self.heuristic_method = heuristic_method
         self._methods = ['attribute_stratification',
                          'attribute_value_stratification',
@@ -34,18 +34,18 @@ class Heuristics:
     def survival_average_based_entropy(self, attribute, value):
         # 2 classes: 0 for survival time < average_survival, 1 otherwise
 
-        average_survival = self._dataset.survival_times[1].mean()
-        covered_rows = list(np.asarray(self._dataset.data[:, self._dataset.get_col_index(attribute)] == value).nonzero())
+        survival_average = self._Dataset.survival_times[1].mean()
+        covered_rows = list(np.asarray(self._Dataset.data[:, self._Dataset.get_col_index(attribute)] == value).nonzero()[0])
         term_freq = len(covered_rows)
 
         class_freq = {}.fromkeys([0, 1], 0)
         for row in covered_rows:
-            if self._dataset.survival_times.iloc[row] < average_survival:
+            if self._Dataset.survival_times[1].iloc[row] < survival_average:
                 class_freq[0] += 1
             else:
                 class_freq[1] += 1
 
-        # A POSTERIORI PROBABILITY: P(W|A=V) / ENTROPY = -[ P(W|A=V) * log2(P(W|A=V)) ]
+        # A POSTERIORI PROBABILITY: P(W|A=V) / ENTROPY = -SUM_FOR_ALL_CLASSES[ P(W|A=V) * log2(P(W|A=V)) ]
         entropy = 0
         for w in class_freq:
             prob_posteriori = class_freq[w] / term_freq
@@ -55,10 +55,10 @@ class Heuristics:
         return 1 - entropy
 
     def attribute_stratification(self, attribute, value):
-        return heuristic
+        return  # heuristic
 
     def attribute_value_stratification(self, attribute, value):
-        return heuristic
+        return  # heuristic
 
 
 

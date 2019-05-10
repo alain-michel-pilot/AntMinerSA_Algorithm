@@ -20,7 +20,7 @@ class Term:
 
     @staticmethod
     def _get_cases(np_data, attribute_idx, value):
-        return list(np.asarray(np_data[:, attribute_idx] == value).nonzero())
+        return list(np.asarray(np_data[:, attribute_idx] == value).nonzero()[0])
 
     def get_heuristic(self):
         return self._heuristic

@@ -6,8 +6,8 @@ class TermsManager:
 
     def __init__(self, dataset, min_case_per_rule):
         self._terms = {}
-        self._availability = {}
         self._attr_values = {}
+        self._availability = {}
         self._pheromone_table = {}
         self._heuristic_table = {}
         self._no_of_terms = 0
@@ -17,48 +17,29 @@ class TermsManager:
 
     def _constructor(self, dataset, min_case_per_rule):
 
-        # Attrubute-Values from the entire dataset
-        attr_values = dataset.attr_values.copy()
-        attrs = list(attr_values.keys())
-
+        attr_values = dataset.attr_values.copy()    # Attribute-Values from the entire dataset
         heuristic_accum = 0
 
-        # TABLES: { Attr : {} }
-        self._terms = {}.fromkeys(attrs, {})
-        self._pheromone_table = {}.fromkeys(attrs, {})
-        self._heuristic_table = {}.fromkeys(attrs, {})
-
-        # TERMS: constructing _terms_dict and _availability
-        self._attr_values = {}.fromkeys(attrs, [])
-        self._availability = {}.fromkeys(attrs)
+        # TERMS:
+        # constructs _terms_dict, _availability and _attr_values with the available attribute-values
         for attr, values in attr_values.items():
-            list_of_values = []
-            values_dict = {}.fromkeys(values)
+            attr_available_values = []
+            available_values_terms = {}
             for value in values:
                 term_obj = Term(attr, value, dataset, min_case_per_rule)
                 if term_obj.available():
-                    values_dict[value] = term_obj
-                    list_of_values.append(value)
+                    available_values_terms[value] = term_obj
+                    attr_available_values.append(value)
                     self._no_of_terms += 1
                     heuristic_accum += term_obj.get_heuristic()
-                else:
-                    values_dict.pop(value, None)
-
-            if not list_of_values:
-                self._terms.pop(attr)
-                self._pheromone_table.pop(attr, None)
-                self._heuristic_table.pop(attr, None)
-                self._attr_values.pop(attr, None)
-                self._availability.pop(attr, None)
-            else:
-                self._terms[attr] = values_dict
-                self._attr_values[attr] = list_of_values[:]
+            if attr_available_values:
+                self._terms[attr] = available_values_terms
+                self._attr_values[attr] = attr_available_values[:]
                 self._availability[attr] = True
+            else:
+                self._availability[attr] = False
 
-        # No available terms on dataset
-        if self._no_of_terms == 0:
-            return
-
+        # TABLES:
         # _pheromone_table: {Attr : {Value : Pheromone}} | _heuristic_table: {Attr : {Value : Heuristic}}
         initial_pheromone = 1 / self._no_of_terms
         for attr, values in self._attr_values.items():
@@ -113,10 +94,9 @@ class TermsManager:
 
     def available(self):
 
-        if self._no_of_terms != 0:
-            for attr in self._availability:
-                if self._availability[attr]:
-                    return True
+        for attr in self._availability:
+            if self._availability[attr]:
+                return True
 
         return False
 

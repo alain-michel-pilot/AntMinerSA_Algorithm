@@ -15,4 +15,4 @@ class UserInputs:   # Define necessary settings
     # Heuristic mehods: attribute_stratification,
     #                   attribute_value_stratification,
     #                   survival_average_based_entropy
-    heuristic_method = ''
+    heuristic_method = 'survival_average_based_entropy'
