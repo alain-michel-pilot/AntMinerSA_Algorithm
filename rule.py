@@ -1,68 +1,57 @@
 import collections
+import copy
+from user_inputs import UserInputs
+from lifelines import KaplanMeierFitter
+from lifelines.statistics import logrank_test
 import numpy as np
 
 
 class Rule:
+    # RULE FORM:        IF < ANTECEDENT > THEN < CONSEQUENT >
+    # ANTECEDENT FORM:  < Attribute_1 = Value > AND < Attribute_2 = Value > AND ... AND < Attribute_N = Value >
+    # CONSEQUENT FORM:  Kaplan-Meier Survival Estimation
 
     def __init__(self, dataset):
         self.antecedent = {}
-        self.consequent = None
-        self.covered_cases = dataset.get_all_cases_index()
-        self.no_covered_cases = len(self.covered_cases)
+        self.consequent = {'survival_times': None, 'events': None, 'km_function': None}
+        self.sub_group_cases = dataset.get_all_cases_index()
+        self.no_covered_cases = len(self.sub_group_cases)
         self.quality = 0.0
-        self._dataset = dataset
+        self._sg_complement = {'survival_times': None, 'events': None, 'km_function': None}
+        self.statistical_test = None
+        self._Dataset = dataset
 
-    def __set_consequent(self):
+    def _set_consequent(self):
 
-        class_idx = self.__dataset.col_index[self.__dataset.class_attr]
-        covered_rows = []
-        max_freq = 0
-        class_chosen = None
+        # Sub group induced by the rule
+        self.consequent['survival_times'] = self._Dataset.survival_times[1].iloc[self.sub_group_cases]
+        self.consequent['events'] = self._Dataset.events[1].iloc[self.sub_group_cases]
 
-        for row in self.covered_cases:
-            covered_rows.append(self.__dataset.data[row])
-        covered_rows = np.array(covered_rows)
+        # Complement of the induced sub group
+        sg_complement = list(set(self.sub_group_cases) ^ set(self._Dataset.get_all_cases_index()))
+        self._sg_complement['survival_times'] = self._Dataset.survival_times[1].iloc[sg_complement]
+        self._sg_complement['events'] = self._Dataset.events[1].iloc[sg_complement]
 
-        class_freq = dict(collections.Counter(covered_rows[:, class_idx]))
-        for w in class_freq:
-            if class_freq[w] > max_freq:
-                class_chosen = w
-                max_freq = class_freq[w]
+        # Kaplan-Meier estimations for sub group and complement
+        kmf = KaplanMeierFitter()
 
-        self.consequent = class_chosen
+        kmf.fit(self.consequent['survival_times'], self.consequent['events'],
+                label='Sub-group KM estimation', alpha=UserInputs.kmf_alpha)
+        self.consequent['km_function'] = copy.deepcopy(kmf)
+
+        kmf.fit(self._sg_complement['survival_times'], self._sg_complement['events'],
+                label='KM estimates for discovered subgroup', alpha=UserInputs.kmf_alpha)
+        self._sg_complement['km_function'] = copy.deepcopy(kmf)
 
         return
 
-    def __set_quality(self):
+    def _set_quality(self):
 
-        tp = 0
-        tn = 0
-        fp = 0
-        fn = 0
-        class_idx = self.__dataset.col_index[self.__dataset.class_attr]
-
-        for row_idx in range(len(self.__dataset.data)):
-            # positive cases (TP|FP): covered by the rule
-            if row_idx in self.covered_cases:
-                if self.__dataset.data[row_idx, class_idx] == self.consequent:
-                    tp += 1
-                else:  # covered but doesnt have the class predicted
-                    fp += 1
-            # negative cases (TN|FN): not covered by the rule
-            else:
-                if self.__dataset.data[row_idx, class_idx] == self.consequent:
-                    fn += 1
-                else:  # not covered and doesnt have the class predicted
-                    tn += 1
-
-        den1 = (tp + fn)
-        den2 = (fp + tn)
-        if den1 == 0:
-            self.quality = 0.0
-        elif den2 == 0:
-            self.quality = 1.0
-        else:
-            self.quality = (tp / den1) * (tn / den2)
+        self.statistical_test = logrank_test(self.consequent['survival_times'],
+                                             self._sg_complement['survival_times'],
+                                             self.consequent['events'],
+                                             self._sg_complement['events'])
+        self.quality = 1 - self.statistical_test.p_value
 
         return
 
@@ -72,18 +61,18 @@ class Rule:
         while terms_mgr.available():
 
             term = terms_mgr.sort_term()
-            covered_cases = list(set(term.covered_cases) & set(self.covered_cases))
+            covered_cases = list(set(term.covered_cases) & set(self.sub_group_cases))
 
             if len(covered_cases) >= min_case_per_rule:
                 self.antecedent[term.attribute] = term.value
-                self.covered_cases = covered_cases
-                self.no_covered_cases = len(self.covered_cases)
+                self.sub_group_cases = covered_cases
+                self.no_covered_cases = len(self.sub_group_cases)
                 terms_mgr.update_availability(term.attribute)
             else:
                 break
 
-        self.__set_consequent()
-        self.__set_quality()
+        self._set_consequent()
+        self._set_quality()
 
         return
 
@@ -93,7 +82,7 @@ class Rule:
             # current rule attributes
             current_antecedent = self.antecedent.copy()
             current_consequent = self.consequent
-            current_cases = self.covered_cases
+            current_cases = self.sub_group_cases
             current_quality = self.quality
 
             # Iteratively removes one attribute from current antecedent
@@ -103,9 +92,9 @@ class Rule:
             for attr in current_antecedent:
                 # new rule attributes
                 self.antecedent.pop(attr, None)
-                self.covered_cases = terms_mgr.get_cases(self.antecedent)
-                self.__set_consequent()
-                self.__set_quality()
+                self.sub_group_cases = terms_mgr.get_cases(self.antecedent)
+                self._set_consequent()
+                self._set_quality()
 
                 if self.quality >= best_quality:
                     best_attr = attr
@@ -114,17 +103,17 @@ class Rule:
                 # restore current rule attributes
                 self.antecedent = current_antecedent.copy()
                 self.consequent = current_consequent
-                self.covered_cases = current_cases
+                self.sub_group_cases = current_cases
                 self.quality = current_quality
 
             if best_attr is None:
                 break
             else:  # save best pruned rule
                 self.antecedent.pop(best_attr, None)
-                self.covered_cases = terms_mgr.get_cases(self.antecedent)
-                self.no_covered_cases = len(self.covered_cases)
-                self.__set_consequent()
-                self.__set_quality()
+                self.sub_group_cases = terms_mgr.get_cases(self.antecedent)
+                self.no_covered_cases = len(self.sub_group_cases)
+                self._set_consequent()
+                self._set_quality()
 
         return
 
@@ -147,12 +136,12 @@ class Rule:
 
     def general_rule(self):
 
-        class_col = self.__dataset.col_index[self.__dataset.class_attr]
-        if len(self.__dataset.data) == 0:
-            original_data = self.__dataset.get_original_data()
+        class_col = self._Dataset.col_index[self._Dataset.class_attr]
+        if len(self._Dataset.data) == 0:
+            original_data = self._Dataset.get_original_data()
             classes = original_data[:, class_col]
         else:
-            classes = self.__dataset.data[:, class_col]
+            classes = self._Dataset.data[:, class_col]
 
         class_freq = dict(collections.Counter(classes))
 
@@ -163,7 +152,7 @@ class Rule:
                 chosen_class = w
                 max_freq = freq
 
-        self.covered_cases = []
+        self.sub_group_cases = []
         self.no_covered_cases = None
         self.quality = None
         self.consequent = chosen_class

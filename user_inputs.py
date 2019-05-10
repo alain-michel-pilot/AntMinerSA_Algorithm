@@ -16,3 +16,7 @@ class UserInputs:   # Define necessary settings
     #                   attribute_value_stratification,
     #                   survival_average_based_entropy
     heuristic_method = 'survival_average_based_entropy'
+
+    # KAPLAN-MEIER PARAMETERS
+    kmf_alpha = 0.05     # alpha value in the confidence intervals of KM function
+
