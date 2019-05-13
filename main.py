@@ -7,7 +7,7 @@ from ant_miner import AntMiner
 from k_fold_crossvalidation import k_fold
 
 
-def main():
+def main(execution):
 
     # INPUT: USER-DEFINED PARAMETERS:
     no_of_ants = 3000
@@ -16,9 +16,9 @@ def main():
     no_rules_converg = 10
 
     # INPUT: DATASET AND CLASS ATTRIBUTE NAME
-    log_file = "log_execution.txt"
-    header = list(pd.read_csv('datasets/car_header.txt', delimiter=','))
-    data = pd.read_csv('datasets/car.data.txt', delimiter=',', header=None, names=header, index_col=False)
+    log_file = "execution_" + str(execution) + ".txt"
+    header = list(pd.read_csv('datasets/glass_header.txt', delimiter=','))
+    data = pd.read_csv('datasets/glass_preprocessed_disc.csv', delimiter=',', header=None, names=header, index_col=False)
     class_attr = 'Class'
 
     # K-FOLD CROSS-VALIDATION SETTINGS
@@ -91,4 +91,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+
+    for e in range(1, 31):
+        main(e)
