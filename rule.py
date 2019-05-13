@@ -3,7 +3,6 @@ import copy
 from user_inputs import UserInputs
 from lifelines import KaplanMeierFitter
 from lifelines.statistics import logrank_test
-import numpy as np
 
 
 class Rule:
@@ -17,9 +16,14 @@ class Rule:
         self.sub_group_cases = dataset.get_all_cases_index()
         self.no_covered_cases = len(self.sub_group_cases)
         self.quality = 0.0
-        self._sg_complement = {'survival_times': None, 'events': None, 'km_function': None}
-        self.statistical_test = None
+        self.sub_group_complement = {'survival_times': None, 'events': None, 'km_function': None}
+        self.logrank_test = None
         self._Dataset = dataset
+
+    def _set_cases(self, cases):
+        self.sub_group_cases = cases
+        self.no_covered_cases = len(cases)
+        return
 
     def _set_consequent(self):
 
@@ -29,29 +33,29 @@ class Rule:
 
         # Complement of the induced sub group
         sg_complement = list(set(self.sub_group_cases) ^ set(self._Dataset.get_all_cases_index()))
-        self._sg_complement['survival_times'] = self._Dataset.survival_times[1].iloc[sg_complement]
-        self._sg_complement['events'] = self._Dataset.events[1].iloc[sg_complement]
+        self.sub_group_complement['survival_times'] = self._Dataset.survival_times[1].iloc[sg_complement]
+        self.sub_group_complement['events'] = self._Dataset.events[1].iloc[sg_complement]
 
         # Kaplan-Meier estimations for sub group and complement
         kmf = KaplanMeierFitter()
 
         kmf.fit(self.consequent['survival_times'], self.consequent['events'],
-                label='Sub-group KM estimation', alpha=UserInputs.kmf_alpha)
+                label='KM estimates for discovered subgroup', alpha=UserInputs.kmf_alpha)
         self.consequent['km_function'] = copy.deepcopy(kmf)
 
-        kmf.fit(self._sg_complement['survival_times'], self._sg_complement['events'],
-                label='KM estimates for discovered subgroup', alpha=UserInputs.kmf_alpha)
-        self._sg_complement['km_function'] = copy.deepcopy(kmf)
+        kmf.fit(self.sub_group_complement['survival_times'], self.sub_group_complement['events'],
+                label='KM estimates for discovered subgroup complement', alpha=UserInputs.kmf_alpha)
+        self.sub_group_complement['km_function'] = copy.deepcopy(kmf)
 
         return
 
     def _set_quality(self):
 
-        self.statistical_test = logrank_test(self.consequent['survival_times'],
-                                             self._sg_complement['survival_times'],
-                                             self.consequent['events'],
-                                             self._sg_complement['events'])
-        self.quality = 1 - self.statistical_test.p_value
+        self.logrank_test = logrank_test(self.consequent['survival_times'],
+                                         self.sub_group_complement['survival_times'],
+                                         self.consequent['events'],
+                                         self.sub_group_complement['events'])
+        self.quality = 1 - self.logrank_test.p_value
 
         return
 
@@ -65,55 +69,13 @@ class Rule:
 
             if len(covered_cases) >= min_case_per_rule:
                 self.antecedent[term.attribute] = term.value
-                self.sub_group_cases = covered_cases
-                self.no_covered_cases = len(self.sub_group_cases)
+                self._set_cases(covered_cases)
                 terms_mgr.update_availability(term.attribute)
             else:
                 break
 
         self._set_consequent()
         self._set_quality()
-
-        return
-
-    def prune(self, terms_mgr):
-
-        while len(self.antecedent) > 1:
-            # current rule attributes
-            current_antecedent = self.antecedent.copy()
-            current_consequent = self.consequent
-            current_cases = self.sub_group_cases
-            current_quality = self.quality
-
-            # Iteratively removes one attribute from current antecedent
-            best_attr = None
-            best_quality = current_quality
-
-            for attr in current_antecedent:
-                # new rule attributes
-                self.antecedent.pop(attr, None)
-                self.sub_group_cases = terms_mgr.get_cases(self.antecedent)
-                self._set_consequent()
-                self._set_quality()
-
-                if self.quality >= best_quality:
-                    best_attr = attr
-                    best_quality = self.quality
-
-                # restore current rule attributes
-                self.antecedent = current_antecedent.copy()
-                self.consequent = current_consequent
-                self.sub_group_cases = current_cases
-                self.quality = current_quality
-
-            if best_attr is None:
-                break
-            else:  # save best pruned rule
-                self.antecedent.pop(best_attr, None)
-                self.sub_group_cases = terms_mgr.get_cases(self.antecedent)
-                self.no_covered_cases = len(self.sub_group_cases)
-                self._set_consequent()
-                self._set_quality()
 
         return
 

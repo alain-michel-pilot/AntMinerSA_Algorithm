@@ -5,6 +5,7 @@ from user_inputs import UserInputs
 from terms_manager import TermsManager
 from rule import Rule
 from dataset import Dataset
+from pruner import Pruner
 
 
 class AntMinerSA:
@@ -18,6 +19,7 @@ class AntMinerSA:
         self.discovered_rule_list = []
         self._Dataset = None
         self._TermsManager = None
+        self._Pruner = None
         self._no_of_uncovered_cases = None
 
     def _global_stopping_condition(self):
@@ -52,6 +54,7 @@ class AntMinerSA:
     def fit(self):
         # Initialization
         self._TermsManager = TermsManager(self._Dataset, self.min_case_per_rule)
+        self._Pruner = Pruner(self._Dataset, self._TermsManager)
         self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
 
         while not self._global_stopping_condition():
@@ -69,7 +72,7 @@ class AntMinerSA:
 
                 current_rule = Rule(self._Dataset)
                 current_rule.construct(self._TermsManager, self.min_case_per_rule)
-                current_rule.prune(self._TermsManager)
+                current_rule = self._Pruner.prune(current_rule)
 
                 if current_rule.quality == 0.0:
                     converg_quality_index += 1
