@@ -22,17 +22,17 @@ class AntMinerSA:
         self._Pruner = None
         self._no_of_uncovered_cases = None
 
-    def _global_stopping_condition(self):
+    def _global_stopping_condition(self, iterations):
         if self._no_of_uncovered_cases < self.max_uncovered_cases:
+            return True
+        if iterations >= self.no_of_ants:
             return True
         return False
 
-    def _local_stopping_condition(self, ant_index, converg_test_index, converg_quality_index):
+    def _local_stopping_condition(self, ant_index, converg_test_index):
         if ant_index >= self.no_of_ants:
             return True
         elif converg_test_index >= self.no_rules_converg:
-            return True
-        elif converg_quality_index >= self.no_rules_converg:
             return True
         return False
 
@@ -57,30 +57,28 @@ class AntMinerSA:
         self._Pruner = Pruner(self._Dataset, self._TermsManager)
         self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
 
-        while not self._global_stopping_condition():
+        iterations = 0
+        while not self._global_stopping_condition(iterations):
 
             # local variables
             ant_index = 0
-            converg_quality_index = 0
             converg_test_index = 1
 
             # Initialize rules
             previous_rule = Rule(self._Dataset)
             best_rule = copy.deepcopy(previous_rule)
+            best_rule.quality = 1 - UserInputs.alpha
 
-            while not self._local_stopping_condition(ant_index, converg_test_index, converg_quality_index):
+            while not self._local_stopping_condition(ant_index, converg_test_index):
 
                 current_rule = Rule(self._Dataset)
                 current_rule.construct(self._TermsManager, self.min_case_per_rule)
                 current_rule = self._Pruner.prune(current_rule)
 
-                if current_rule.quality == 0.0:
-                    converg_quality_index += 1
-                elif current_rule.equals(previous_rule):
+                if current_rule.equals(previous_rule):
                     converg_test_index += 1
                 else:
                     converg_test_index = 1
-                    converg_quality_index = 1
                     if current_rule.quality > best_rule.quality:
                         best_rule = copy.deepcopy(current_rule)
 
@@ -88,45 +86,39 @@ class AntMinerSA:
                 previous_rule = copy.deepcopy(current_rule)
                 ant_index += 1
 
-            if best_rule.quality == 0.0:
+            if best_rule.quality == 1 - UserInputs.alpha:   # did not generate any rules
                 break
             else:
                 self.discovered_rule_list.append(best_rule)
-                self._Dataset.update_covered_cases(best_rule.covered_cases)
+                self._Dataset.update_covered_cases(best_rule.sub_group_cases)
                 self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
+            iterations += 1
         # END OF WHILE (AVAILABLE_CASES > MAX_UNCOVERED_CASES)
-
-        # generating rule for remaining cases
-        general_rule = Rule(self._Dataset)
-        general_rule.general_rule()
-        self.discovered_rule_list.append(general_rule)
 
         return
 
-    def predict(self, test_dataset):
+    def results(self, log_file):
+        f = open(log_file, "a+")
 
-        predicted_classes = []
-        all_cases = len(test_dataset.data)
+        f.write('\n\n====== ANT-MINER PARAMETERS ======')
+        f.write('\nNumber of ants: ' + repr(self.no_of_ants))
+        f.write('\nNumber of minimum cases per rule: ' + repr(self.min_case_per_rule))
+        f.write('\nNumber of maximum uncovered cases: ' + repr(self.max_uncovered_cases))
+        f.write('\nNumber of rules for convergence: ' + repr(self.no_rules_converg))
+        f.write('\n\n====== USER INPUTS PARAMETERS ======')
+        f.write('\nHeuristic method: ' + repr(UserInputs.heuristic_method))
+        f.write('\nAlpha value for KM function confidence interval: ' + repr(UserInputs.kmf_alpha))
+        f.write('\nAlpha value for LogRank confidence: ' + repr(UserInputs.alpha))
+        f.write('\n\n====== RUN INFORMATION ======')
+        f.write('\nDatabase path: ' + repr(UserInputs.data_path))
+        f.write('\nInstances: ' + repr(self._Dataset.data.shape[0]))
+        f.write('\nAttributes: ' + repr(self._Dataset.data.shape[1]))
+        f.write('\nNumber of remaining uncovered cases: ' + repr(self._no_of_uncovered_cases))
+        f.write('\n\n====== DISCOVERED RULES ======')
+        f.write('\n- Average survival on dataset: ' + repr(self._Dataset.average_survival) + '\n')
+        f.close()
 
-        rules = copy.deepcopy(self.discovered_rule_list[:-1])
-        remaining_cases_rule = copy.deepcopy(self.discovered_rule_list[-1])
+        for index, rule in enumerate(self.discovered_rule_list):
+            rule.print_rule(log_file, index)
 
-        for case in range(all_cases):  # for each new case
-            chosen_class = None
-
-            for rule in rules:  # sequential rule compatibility test
-                compatibility = True
-                for attr, value in rule.antecedent.items():
-                    if value != test_dataset.data[case, test_dataset.col_index[attr]]:
-                        compatibility = False
-                        break
-                if compatibility:
-                    chosen_class = rule.consequent
-                    break
-
-            if chosen_class is None:
-                chosen_class = remaining_cases_rule.consequent
-
-            predicted_classes.append(chosen_class)
-
-        return predicted_classes
+        return

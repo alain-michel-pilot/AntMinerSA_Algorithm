@@ -6,6 +6,7 @@ class Dataset:
 
     def __init__(self, data, attr_survival_name, attr_event_name, attr_id_name, attr_to_ignore):
         self.survival_times = (attr_survival_name, data[attr_survival_name])
+        self.average_survival = data[attr_survival_name].mean()
         self.events = (attr_event_name, data[attr_event_name])
         self.attr_values = {}
         self.data = None
@@ -57,5 +58,6 @@ class Dataset:
     def get_no_of_uncovered_cases(self):
         return sum(self._uncovered_cases)
 
-    def get_all_cases_index(self):
+    def get_instances(self):
         return list(range(len(self.data)))
+

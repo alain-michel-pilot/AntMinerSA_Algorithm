@@ -1,0 +1,34 @@
+
+==== ADDICTS DATASET (addicts.dat)
+fonte: http://web1.sph.emory.edu/dkleinb/allDatasets/surv2datasets/addicts.dat
+referência: Kleinbaum, D.G. and Klein, M., 2010. Survival analysis (Vol. 3). New York: Springer.
+
+In a 1991 Australian study by Caplehorn et al., two methadone treatment clinics for heroin addicts were compared
+to assess patient time remaining under methadone treatment. A patient’s survival time was determined as the time
+(in days) until the person dropped out of the clinic or was censored. The two clinics differed according to its live-in
+policies for patients. The variables are defined as follows:
+- ID: Patient ID
+- SURVT: The time (in days) until the patient dropped out of the clinic or was censored
+- STATUS: Indicates whether the patient dropped out of the clinic (coded 1) or was censored (coded 0)
+- CLINIC: Indicates which methadone treatment clinic the patient attended (coded 1 or 2)
+- PRISON: Indicates whether the patient had a prison record (coded 1) or not (coded 0)
+- DOSE: A continuous variable for the patient’s maximum methadone dose (mg/day)
+
+
+==== BLADDER CANCER DATASET (bladder.dat)
+fonte: http://web1.sph.emory.edu/dkleinb/allDatasets/surv2datasets/bladder.dat
+referência: Kleinbaum, D.G. and Klein, M., 2010. Survival analysis (Vol. 3). New York: Springer.
+
+The bladder cancer dataset contains recurrent event outcome information for eighty-six cancer patients followed
+for the recurrence of bladder cancer tumor after transurethral surgical excision(ByarandGreen1980).The exposure
+of interest is the effect of the drug treatment of thiotepa. Control variables are the initial number and initial size of
+tumors.The data layoutis suitable for acounting processes approach. The variables are defined as follows:
+- ID: Patient ID (may have multiple observations for the same subject)
+- EVENT: Indicates whether the patient had a tumor (coded 1) or not (coded 0)
+- INTERVAL: A counting number representing the order of the time interval for a given subject (coded 1 for the
+subject’s first time interval, coded 2 for a subject’s second time interval, etc.)
+- START: The starting time (in months) for each interval
+- STOP: The time of event (in months) or censorship for each interval
+- TX: Treatment status (coded 1 for treatment with thiotepa and 0 for the placebo)
+- NUM: The initial number of tumors
+- SIZE: The initial size (in centimeters) of the tumor

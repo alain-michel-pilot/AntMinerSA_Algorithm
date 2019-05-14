@@ -1,0 +1,1 @@
+ID,Clinic,status,survival_time,prison record,methodone_dose

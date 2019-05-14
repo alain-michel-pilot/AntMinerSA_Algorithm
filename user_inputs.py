@@ -18,5 +18,7 @@ class UserInputs:   # Define necessary settings
     heuristic_method = 'survival_average_based_entropy'
 
     # KAPLAN-MEIER PARAMETERS
-    kmf_alpha = 0.05     # alpha value in the confidence intervals of KM function
+    kmf_alpha = 0.05        # alpha value in the confidence intervals of KM function
 
+    # RULE PARAMETERS
+    alpha = 0.05            # alpha value for statistical test confidence
