@@ -18,7 +18,7 @@ class Rule:
         self.sub_group_complement = {'survival_times': None, 'events': None}
         self.quality = 0.0
         self.logrank_test = None
-        self._string_repr = ''
+        self.string_repr = ()
         self._Dataset = dataset
 
     def set_cases(self, cases):
@@ -83,22 +83,27 @@ class Rule:
 
         return True
 
-    def print_rule(self, file, index):
-
+    def set_string_repr(self, index):
         rule_id = 'R' + str(index)
         average_survival = self.sub_group['survival_times'].mean()
         quality = self.quality
         p_value = self.logrank_test.p_value
 
-        self._string_repr = '\n{}: IF <'.format(rule_id) +\
-                            '> AND <'.join(['{} = {}'.format(key, value) for (key, value) in self.antecedent.items()]) +\
-                            '> THAN <average_survival = {}> <quality = {}> <p_value = {}>'.format(average_survival, quality, p_value)
+        string = 'IF <' +\
+                 '> AND <'.join(['{} = {}'.format(key, value) for (key, value) in self.antecedent.items()]) +\
+                 '> THAN <average_survival = {}> <quality = {}> <p_value = {}>'.format(average_survival, quality, p_value)
+
+        self.string_repr = (rule_id, string)
+        return
+
+    def print_rule(self, file):
 
         f = open(file, "a+")
-        f.write(self._string_repr)
+        f.write('\n')
+        f.write(self.string_repr[1])
         f.close()
 
-        print(self._string_repr)
+        print(self.string_repr[0] + ': ' + self.string_repr[1])
 
         return
 
@@ -108,21 +113,24 @@ class Rule:
         rcParams['figure.figsize'] = 15, 6
         ax = plt.subplot(111)
         fig_id = 'R' + str(index) + '_model'
-        plt.figure(index)
+        plt.figure(index+1)
 
-        kmf = KaplanMeierFitter()
+        kmf_sg = KaplanMeierFitter()
+        kmf_cpl = KaplanMeierFitter()
 
-        kmf.fit(self.sub_group['survival_times'], self.sub_group['events'],
-                label='KM estimates for subgroup', alpha=UserInputs.kmf_alpha)
-        kmf.plot(ax=ax)
+        kmf_sg.fit(self.sub_group['survival_times'], self.sub_group['events'],
+                   label='KM estimates for subgroup', alpha=UserInputs.kmf_alpha)
+        kmf_sg.plot(ax=ax)
 
-        kmf.fit(self.sub_group_complement['survival_times'], self.sub_group_complement['events'],
-                label='KM estimates for complement', alpha=UserInputs.kmf_alpha)
-        kmf.plot(ax=ax)
+        kmf_cpl.fit(self.sub_group_complement['survival_times'], self.sub_group_complement['events'],
+                    label='KM estimates for complement', alpha=UserInputs.kmf_alpha)
+        kmf_cpl.plot(ax=ax)
 
-        plt.title(self._string_repr)
+        title = self.string_repr[0] + ': ' + self.string_repr[1]
+        plt.title(title)
         plt.xlabel('Time')
         plt.ylabel('Survival probability')
+        plt.show()
         plt.savefig(fig_id)
 
         return

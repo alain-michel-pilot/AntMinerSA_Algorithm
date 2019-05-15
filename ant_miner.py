@@ -97,9 +97,13 @@ class AntMinerSA:
             iterations += 1
         # END OF WHILE (AVAILABLE_CASES > MAX_UNCOVERED_CASES)
 
+        # generates the rules representative strings
+        for index, rule in enumerate(self.discovered_rule_list):
+            rule.set_string_repr(index)
+
         return
 
-    def results(self, log_file):
+    def save_results(self, log_file):
         f = open(log_file, "a+")
 
         f.write('\n\n====== ANT-MINER PARAMETERS ======')
@@ -121,7 +125,20 @@ class AntMinerSA:
         f.close()
 
         for index, rule in enumerate(self.discovered_rule_list):
-            rule.print_rule(log_file, index)
+            rule.print_rule(log_file)
             rule.plot_km_estimates(index)
 
         return
+
+    def print_discovered_rules(self):
+
+        for rule in self.discovered_rule_list:
+            print(rule.string_repr[0] + ': ' + rule.string_repr[1])
+
+        return
+
+    def get_data(self):
+        return self._Dataset.get_data()
+
+    def get_train_data(self):
+        return self._Dataset.data

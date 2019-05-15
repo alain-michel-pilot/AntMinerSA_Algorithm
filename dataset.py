@@ -60,4 +60,3 @@ class Dataset:
 
     def get_instances(self):
         return list(range(len(self.data)))
-

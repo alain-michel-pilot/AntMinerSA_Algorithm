@@ -13,7 +13,7 @@ def main():
     ant_miner = AntMinerSA(no_of_ants, min_cases_per_rule, max_uncovered_cases, no_rules_converg)
     ant_miner.read_data()
     ant_miner.fit()
-    ant_miner.results("log_run.txt")
+    ant_miner.save_results("log_run.txt")
 
     return
 

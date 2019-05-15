@@ -33,5 +33,4 @@ class Pruner:
 
             if not self._pruning_flag:
                 break
-
         return self.current_rule
