@@ -92,6 +92,8 @@ class AntMinerSA:
                 self.discovered_rule_list.append(best_rule)
                 self._Dataset.update_covered_cases(best_rule.sub_group_cases)
                 self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
+
+            self._TermsManager.pheromone_init()
             iterations += 1
         # END OF WHILE (AVAILABLE_CASES > MAX_UNCOVERED_CASES)
 
@@ -120,5 +122,6 @@ class AntMinerSA:
 
         for index, rule in enumerate(self.discovered_rule_list):
             rule.print_rule(log_file, index)
+            rule.plot_km_estimates(index)
 
         return

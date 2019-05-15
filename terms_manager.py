@@ -139,3 +139,11 @@ class TermsManager:
         self._reset_availability()
 
         return
+
+    def pheromone_init(self):
+        # Restores pheromone initial configuration
+        initial_pheromone = 1 / self._no_of_terms
+        self._pheromone_table = {}
+        for attr, values in self._attr_values.items():
+            self._pheromone_table[attr] = {}.fromkeys(values, initial_pheromone)
+        return

@@ -1,13 +1,14 @@
-import copy
 from user_inputs import UserInputs
 from lifelines import KaplanMeierFitter
 from lifelines.statistics import logrank_test
+from matplotlib import pyplot as plt
+from matplotlib.pylab import rcParams
 
 
 class Rule:
     # RULE FORM:        IF < ANTECEDENT > THEN < CONSEQUENT >
     # ANTECEDENT FORM:  < Attribute_1 = Value > AND < Attribute_2 = Value > AND ... AND < Attribute_N = Value >
-    # CONSEQUENT FORM:  Kaplan-Meier Survival Estimation
+    # CONSEQUENT FORM:  <survival_average> <quality> <logrank p-value>
 
     def __init__(self, dataset):
         self.antecedent = {}
@@ -17,6 +18,7 @@ class Rule:
         self.sub_group_complement = {'survival_times': None, 'events': None}
         self.quality = 0.0
         self.logrank_test = None
+        self._string_repr = ''
         self._Dataset = dataset
 
     def set_cases(self, cases):
@@ -88,30 +90,39 @@ class Rule:
         quality = self.quality
         p_value = self.logrank_test.p_value
 
-        string = '\n{}: IF <'.format(rule_id) + \
-                 '> AND <'.join(['{} = {}'.format(key, value) for (key, value) in self.antecedent.items()]) + \
-                 '> THAN <average_survival = {}> <quality = {}> <p_value = {}>'.format(average_survival, quality, p_value)
+        self._string_repr = '\n{}: IF <'.format(rule_id) +\
+                            '> AND <'.join(['{} = {}'.format(key, value) for (key, value) in self.antecedent.items()]) +\
+                            '> THAN <average_survival = {}> <quality = {}> <p_value = {}>'.format(average_survival, quality, p_value)
 
         f = open(file, "a+")
-        f.write(string)
+        f.write(self._string_repr)
         f.close()
 
-        print(string)
+        print(self._string_repr)
 
         return
 
-    # def plot_km_estimates(self):
-    #
-    #     # Kaplan-Meier estimations for sub group and complement
-    #     km_estimates = {}
-    #     kmf = KaplanMeierFitter()
-    #
-    #     kmf.fit(self.sub_group['survival_times'], self.sub_group['events'],
-    #             label='KM estimates for discovered subgroup', alpha=UserInputs.kmf_alpha)
-    #     km_estimates['sub_group'] = copy.deepcopy(kmf)
-    #
-    #     kmf.fit(self.sub_group_complement['survival_times'], self.sub_group_complement['events'],
-    #             label='KM estimates for discovered subgroup complement', alpha=UserInputs.kmf_alpha)
-    #     km_estimates['complement'] = copy.deepcopy(kmf)
-    #
-    #     return
+    def plot_km_estimates(self, index):
+        # Kaplan-Meier estimations for sub group and complement
+
+        rcParams['figure.figsize'] = 15, 6
+        ax = plt.subplot(111)
+        fig_id = 'R' + str(index) + '_model'
+        plt.figure(index)
+
+        kmf = KaplanMeierFitter()
+
+        kmf.fit(self.sub_group['survival_times'], self.sub_group['events'],
+                label='KM estimates for subgroup', alpha=UserInputs.kmf_alpha)
+        kmf.plot(ax=ax)
+
+        kmf.fit(self.sub_group_complement['survival_times'], self.sub_group_complement['events'],
+                label='KM estimates for complement', alpha=UserInputs.kmf_alpha)
+        kmf.plot(ax=ax)
+
+        plt.title(self._string_repr)
+        plt.xlabel('Time')
+        plt.ylabel('Survival probability')
+        plt.savefig(fig_id)
+
+        return
