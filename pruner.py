@@ -7,15 +7,13 @@ class Pruner:
     def __init__(self, dataset, terms_mgr):
         self._terms_mgr = terms_mgr
         self._dataset = dataset
-        self._pruning_flag = False
         self.current_rule = None
 
     def prune(self, rule):
-
         self.current_rule = copy.deepcopy(rule)
 
         while len(self.current_rule.antecedent) > 1:
-
+            pruning_flag = False
             current_antecedent = self.current_rule.antecedent.copy()
 
             for attr in current_antecedent:
@@ -28,9 +26,9 @@ class Pruner:
                 pruned_rule.set_quality()
 
                 if pruned_rule.quality >= self.current_rule.quality:
-                    self._pruning_flag = True
+                    pruning_flag = True
                     self.current_rule = copy.deepcopy(pruned_rule)
 
-            if not self._pruning_flag:
+            if not pruning_flag:
                 break
         return self.current_rule

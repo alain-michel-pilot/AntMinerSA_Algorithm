@@ -130,7 +130,6 @@ class Rule:
         plt.title(title)
         plt.xlabel('Time')
         plt.ylabel('Survival probability')
-        plt.show()
         plt.savefig(fig_id)
 
         return
