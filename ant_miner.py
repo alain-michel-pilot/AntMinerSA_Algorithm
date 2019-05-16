@@ -89,9 +89,10 @@ class AntMinerSA:
             if best_rule.quality == 1 - UserInputs.alpha:   # did not generate any rules
                 break
             else:
-                self.discovered_rule_list.append(best_rule)
-                self._Dataset.update_covered_cases(best_rule.sub_group_cases)
-                self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
+                if self._can_add_rule(best_rule):   # check if rule already exists on the list
+                    self.discovered_rule_list.append(best_rule)
+                    self._Dataset.update_covered_cases(best_rule.sub_group_cases)
+                    self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
 
             self._TermsManager.pheromone_init()
             iterations += 1
@@ -142,3 +143,11 @@ class AntMinerSA:
 
     def get_train_data(self):
         return self._Dataset.data
+
+    def _can_add_rule(self, new_rule):
+        # check if generated rule already exists on the list
+
+        for rule in self.discovered_rule_list:
+            if new_rule.equals(rule):
+                return False
+        return True

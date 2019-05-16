@@ -113,15 +113,12 @@ class Rule:
         rcParams['figure.figsize'] = 15, 6
         plt.figure(index + 1)
         ax = plt.subplot(111)
-        fig_id = 'R' + str(index) + '_model'
 
         kmf_sg = KaplanMeierFitter()
         kmf_cpl = KaplanMeierFitter()
-
         kmf_sg.fit(self.sub_group['survival_times'], self.sub_group['events'],
                    label='KM estimates for subgroup', alpha=UserInputs.kmf_alpha)
         kmf_sg.plot(ax=ax)
-
         kmf_cpl.fit(self.sub_group_complement['survival_times'], self.sub_group_complement['events'],
                     label='KM estimates for complement', alpha=UserInputs.kmf_alpha)
         kmf_cpl.plot(ax=ax)
@@ -130,6 +127,8 @@ class Rule:
         plt.title(title)
         plt.xlabel('Time')
         plt.ylabel('Survival probability')
+
+        fig_id = self.string_repr[0] + '_model'
         plt.savefig(fig_id)
 
         return
