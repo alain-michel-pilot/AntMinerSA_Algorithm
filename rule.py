@@ -111,9 +111,9 @@ class Rule:
         # Kaplan-Meier estimations for sub group and complement
 
         rcParams['figure.figsize'] = 15, 6
+        plt.figure(index + 1)
         ax = plt.subplot(111)
         fig_id = 'R' + str(index) + '_model'
-        plt.figure(index+1)
 
         kmf_sg = KaplanMeierFitter()
         kmf_cpl = KaplanMeierFitter()
