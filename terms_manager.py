@@ -11,7 +11,6 @@ class TermsManager:
         self._pheromone_table = {}
         self._heuristic_table = {}
         self._no_of_terms = 0
-
         np.random.seed(0)
 
         # build object
