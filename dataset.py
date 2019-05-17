@@ -1,23 +1,42 @@
 import pandas as pd
 import numpy as np
+from discretizer import Discretizer
 
 
 class Dataset:
 
-    def __init__(self, data, attr_survival_name, attr_event_name, attr_id_name, attr_to_ignore):
-        self.survival_times = (attr_survival_name, data[attr_survival_name])
-        self.average_survival = data[attr_survival_name].mean()
-        self.events = (attr_event_name, data[attr_event_name])
+    def __init__(self, data, attr_survival_name, attr_event_name, attr_id_name, attr_to_ignore, discretization):
+        self.survival_times = ()
+        self.average_survival = None
+        self.events = ()
         self.attr_values = {}
         self.data = None
 
         self._col_index = {}
         self._uncovered_cases = [True]*data.shape[0]
         self._original_data = data.copy()
+        self._discretized_data = None
+        self._discretization = discretization
 
-        self._constructor(data, attr_survival_name, attr_event_name, attr_id_name, attr_to_ignore)
+        if self._discretization:
+            self._discretize()
 
-    def _constructor(self, data, attr_survival_name, attr_event_name, attr_id_name, attr_to_ignore):
+        self._constructor(attr_survival_name, attr_event_name, attr_id_name, attr_to_ignore)
+
+    def _discretize(self):
+        self._discretized_data = Discretizer().discretize(self._original_data)
+        return
+
+    def _constructor(self, attr_survival_name, attr_event_name, attr_id_name, attr_to_ignore):
+
+        if self._discretization:
+            data = self._discretized_data.copy()
+        else:
+            data = self._original_data.copy()
+
+        self.survival_times = (attr_survival_name, data[attr_survival_name])
+        self.average_survival = data[attr_survival_name].mean()
+        self.events = (attr_event_name, data[attr_event_name])
 
         to_drop = [attr_survival_name, attr_event_name]
         if attr_id_name is not None:
@@ -51,6 +70,9 @@ class Dataset:
 
     def get_data(self):
         return self._original_data
+
+    def get_data_disc(self):
+        return self._discretized_data
 
     def get_cases_coverage(self):   # returns a bool list with True for covered cases
         return [covered == False for covered in self._uncovered_cases]

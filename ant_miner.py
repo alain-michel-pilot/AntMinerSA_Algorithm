@@ -42,12 +42,13 @@ class AntMinerSA:
                   attr_survival_name=UserInputs.attr_survival_name,
                   attr_event_name=UserInputs.attr_event_name,
                   attr_id_name=UserInputs.attr_id_name,
-                  attr_to_ignore=UserInputs.attr_to_ignore):  # use attr_id_name in preprocessing: unify non-unique cases
+                  attr_to_ignore=UserInputs.attr_to_ignore,
+                  discretization=False):
 
         header = list(pd.read_csv(header_path, delimiter=','))
         data = pd.read_csv(data_path, delimiter=',', header=None, names=header, index_col=False)
         data.reset_index()
-        self._Dataset = Dataset(data, attr_survival_name, attr_event_name, attr_id_name, attr_to_ignore)
+        self._Dataset = Dataset(data, attr_survival_name, attr_event_name, attr_id_name, attr_to_ignore, discretization)
 
         return
 

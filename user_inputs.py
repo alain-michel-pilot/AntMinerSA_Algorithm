@@ -22,3 +22,9 @@ class UserInputs:   # Define necessary settings
 
     # RULE PARAMETERS
     alpha = 0.05            # alpha value for statistical test confidence
+
+    # DISCRETIZER PARAMETERS
+    attr_2disc_names = ['methodone_dose']
+    save_log = True
+    discretization_method = 'KBins'
+    # kwargs = [n_bins=, encode=, strategy=]   # insert setting variables for discretizer

@@ -11,8 +11,9 @@ class Pruner:
 
     def prune(self, rule):
         self.current_rule = copy.deepcopy(rule)
-
+        it = 0
         while len(self.current_rule.antecedent) > 1:
+            it += 1
             pruning_flag = False
             current_antecedent = self.current_rule.antecedent.copy()
 
