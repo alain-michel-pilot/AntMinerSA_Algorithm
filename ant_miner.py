@@ -22,10 +22,12 @@ class AntMinerSA:
         self._Pruner = None
         self._no_of_uncovered_cases = None
 
-    def _global_stopping_condition(self, iterations):
+    def _global_stopping_condition(self, iterations, converg_list_index):
         if self._no_of_uncovered_cases < self.max_uncovered_cases:
             return True
         if iterations >= self.no_of_ants:
+            return True
+        if converg_list_index >= self.no_rules_converg:
             return True
         return False
 
@@ -59,7 +61,8 @@ class AntMinerSA:
         self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
 
         iterations = 0
-        while not self._global_stopping_condition(iterations):
+        converg_list_index = 0
+        while not self._global_stopping_condition(iterations, converg_list_index):
 
             # local variables
             ant_index = 0
@@ -94,6 +97,9 @@ class AntMinerSA:
                     self.discovered_rule_list.append(best_rule)
                     self._Dataset.update_covered_cases(best_rule.sub_group_cases)
                     self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
+                    converg_list_index = 0
+                else:
+                    converg_list_index += 1
 
             self._TermsManager.pheromone_init()
             iterations += 1

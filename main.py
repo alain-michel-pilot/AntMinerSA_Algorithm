@@ -5,7 +5,7 @@ def main():
 
     # INPUT: USER-DEFINED PARAMETERS:
     no_of_ants = 3000
-    min_cases_per_rule = 5
+    min_cases_per_rule = 3
     max_uncovered_cases = 10
     no_rules_converg = 10
 

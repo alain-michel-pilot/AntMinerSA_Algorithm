@@ -9,6 +9,7 @@ class Discretizer:
         self._method = UserInputs.discretization_method
         self._log_file = 'log_discretization.txt'
         self._save_file = 'data_discretized.csv'
+        self._save_head = False
 
     def discretize(self, data):
 
@@ -17,10 +18,15 @@ class Discretizer:
 
     def _save_log(self, attribute, original, data_encoded, data_disc):
 
+        if not self._save_head:
+            f = open(self._log_file, "a+")
+            f.write('Original data file: {}'.format(UserInputs.data_path))
+            f.write('\nDiscretized data save file: {}'.format(self._save_file))
+            f.write('\n\n ===== ATTRIBUTE DISCRETIZATION INFO =====')
+            f.close()
+            self._save_head = True
+
         f = open(self._log_file, "a+")
-        f.write('Original data file: {}'.format(UserInputs.data_path))
-        f.write('\nDiscretized data save file: {}'.format(self._save_file))
-        f.write('\n\n ===== ATTRIBUTE DISCRETIZATION INFO =====')
         f.write('\n\n>> Attribute name: {}'.format(attribute))
         f.write('\n- Original data unique values: \n{}'.format(list(np.unique(original))))
         f.write('\n- Encoded labels: \n{}'.format(list(np.unique(data_encoded))))

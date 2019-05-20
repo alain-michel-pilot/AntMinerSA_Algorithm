@@ -32,3 +32,29 @@ subject’s first time interval, coded 2 for a subject’s second time interval,
 - TX: Treatment status (coded 1 for treatment with thiotepa and 0 for the placebo)
 - NUM: The initial number of tumors
 - SIZE: The initial size (in centimeters) of the tumor
+
+
+==== GBSG2 DATASET (gbsg2.csv)
+fonte: lifelines.dataset
+referência: Schumacher, M., Bastert, G., Bojar, H., Huebner, K., Olschewski, M., Sauerbrei, W., Schmoor, C., Beyerle, C., Neumann, R.L. and Rauschecker, H.F., 1994.
+			Randomized 2 x 2 trial evaluating hormonal treatment and the duration of chemotherapy in node-positive breast cancer patients.
+			German Breast Cancer Study Group. Journal of Clinical Oncology, 12(10), pp.2086-2093.
+
+In 1984, the German Breast Cancer Study Group (GBSG) started a multicenter randomized clinical trial to compare the effectiveness
+of three versus six cycles of 500 mg/m 2 cyclophosphamide, 40 mg/m' methotrexate, and 600 mg/m 2 flourouracil (CMF)
+on day 1 and 8 starting perioperatively with or without tamoxifen (TAM) (3 x 10 mg/d for 2 years).
+The aim of the trial was to compare recurrence-free and overall survival between the different treatment modalities.
+
+This data frame contains the observations of 686 women:
+- horTh: hormonal therapy, a factor at two levels no and yes.
+- age: of the patients in years.
+- menostat: menopausal status, a factor at two levels pre (premenopausal) and post (postmenopausal).
+- tsize: tumor size (in mm).
+- tgrade: tumor grade, a ordered factor at levels I < II < III.
+- pnodes: number of positive nodes.
+- progrec: progesterone receptor (in fmol).
+- estrec: estrogen receptor (in fmol).
+- time: recurrence free survival time (in days).
+- cens: censoring indicator (0- censored, 1- event).
+(fonte da descrição: https://rdrr.io/cran/TH.data/man/GBSG2.html)
+
