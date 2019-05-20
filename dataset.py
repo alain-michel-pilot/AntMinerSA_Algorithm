@@ -51,7 +51,7 @@ class Dataset:
             self.attr_values[name] = list(pd.unique(data[name]))
 
         self._col_index = dict.fromkeys(col_names)
-        for idx, name in enumerate(col_names):
+        for name in col_names:
             self._col_index[name] = data.columns.get_loc(name)
 
         self.data = np.array(data.values)

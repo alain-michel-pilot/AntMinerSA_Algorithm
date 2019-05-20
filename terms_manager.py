@@ -22,7 +22,7 @@ class TermsManager:
         heuristic_accum = 0
 
         # TERMS:
-        # constructs _terms_dict, _availability and _attr_values with the available attribute-values
+        # constructs _terms, _availability and _attr_values with the available attribute-values
         for attr, values in attr_values.items():
             attr_available_values = []
             available_values_terms = {}
