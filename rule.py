@@ -86,12 +86,10 @@ class Rule:
     def set_string_repr(self, index):
         rule_id = 'R' + str(index)
         average_survival = self.sub_group['survival_times'].mean()
-        quality = self.quality
-        p_value = self.logrank_test.p_value
 
         string = 'IF <' +\
                  '> AND <'.join(['{} = {}'.format(key, value) for (key, value) in self.antecedent.items()]) +\
-                 '> THAN <average_survival = {}> <quality = {}> <p_value = {}>'.format(average_survival, quality, p_value)
+                 '> THAN <average_survival = {0:.4f}>'.format(average_survival)
 
         self.string_repr = (rule_id, string)
         return

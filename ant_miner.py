@@ -21,14 +21,15 @@ class AntMinerSA:
         self._TermsManager = None
         self._Pruner = None
         self._no_of_uncovered_cases = None
+        self._iterations = 0
 
-    def _global_stopping_condition(self, iterations, converg_list_index):
+    def _global_stopping_condition(self, converg_list_index):
         if self._no_of_uncovered_cases < self.max_uncovered_cases:
             return True
-        if iterations >= self.no_of_ants:
+        if self._iterations >= self.no_of_ants:
             return True
-        if converg_list_index >= self.no_rules_converg:
-            return True
+#        if converg_list_index >= self.no_rules_converg:
+#            return True
         return False
 
     def _local_stopping_condition(self, ant_index, converg_test_index):
@@ -60,9 +61,8 @@ class AntMinerSA:
         self._Pruner = Pruner(self._Dataset, self._TermsManager)
         self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
 
-        iterations = 0
         converg_list_index = 0
-        while not self._global_stopping_condition(iterations, converg_list_index):
+        while not self._global_stopping_condition(converg_list_index):
 
             # local variables
             ant_index = 0
@@ -102,7 +102,7 @@ class AntMinerSA:
                     converg_list_index += 1
 
             self._TermsManager.pheromone_init()
-            iterations += 1
+            self._iterations += 1
         # END OF WHILE (AVAILABLE_CASES > MAX_UNCOVERED_CASES)
 
         # generates the rules representative strings
@@ -113,7 +113,6 @@ class AntMinerSA:
 
     def save_results(self, log_file):
         f = open(log_file, "a+")
-
         f.write('\n\n====== ANT-MINER PARAMETERS ======')
         f.write('\nNumber of ants: {}'.format(self.no_of_ants))
         f.write('\nNumber of minimum cases per rule: {}'.format(self.min_case_per_rule))
@@ -128,6 +127,8 @@ class AntMinerSA:
         f.write('\nInstances: {}'.format(self._Dataset.data.shape[0]))
         f.write('\nAttributes: {}'.format(self._Dataset.data.shape[1]))
         f.write('\nNumber of remaining uncovered cases: {}'.format(self._no_of_uncovered_cases))
+        f.write('\nNumber of iterations: {}'.format(self._iterations))
+        f.write('\nNumber of discovered rules: {}'.format(len(self.discovered_rule_list)))
         f.write('\n\n====== DISCRETIZATION INFO ======')
         f.write('\nDiscretization method: {}'.format(UserInputs.discretization_method))
         f.write('\nDiscretized attributes: ' + repr(UserInputs.attr_2disc_names))
@@ -135,9 +136,23 @@ class AntMinerSA:
         f.write('\n> Average survival on dataset: {}'.format(self._Dataset.average_survival) + '\n')
         f.close()
 
+        # print all rules representatives and plots
         for index, rule in enumerate(self.discovered_rule_list):
             rule.print_rule(log_file)
             rule.plot_km_estimates(index)
+
+        # print rules info
+        f = open(log_file, "a+")
+        f.write('\n\n====== DISCOVERED RULES INFO ======\n')
+        f.close()
+        for rule in self.discovered_rule_list:
+            rule.print_rule(log_file)
+            with open(log_file, "a+") as f:
+                f.write('\n> Number of covered cases: {}'.format(rule.no_covered_cases))
+                f.write('\n> Covered cases: ' + repr(rule.sub_group_cases))
+                f.write('\n> Quality: ' + repr(rule.quality))
+                f.write('\n> p-value of LogRank test: ' + repr(rule.logrank_test.p_value))
+                f.write('\n')
 
         return
 
