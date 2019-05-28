@@ -1,0 +1,1 @@
+treatment,cell_type,survival_time,cens,karnofsky_score,months_from_diagnosis,age,prior_therapy

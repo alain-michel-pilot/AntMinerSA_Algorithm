@@ -58,3 +58,64 @@ This data frame contains the observations of 686 women:
 - cens: censoring indicator (0- censored, 1- event).
 (fonte da descrição: https://rdrr.io/cran/TH.data/man/GBSG2.html)
 
+
+==== PRIMARY BILIARY CIRRHOSIS (biliary_cirrhosis.csv)
+fonte: http://www.stat.rice.edu/~sneeley/STAT553/Datasets/survivaldata.txt
+
+The data set found in appendix D of Fleming and Harrington, Counting Processes and Survival Analysis, Wiley, 1991.
+The only differences are: 
+- age is in days 
+- status is coded as 0=censored, 1=censored due to liver tx, 2=death 
+- the sex and stage variables are not missing for obs 313-418 
+  
+Quoting from F&H. "The following pages contain the data from the Mayo Clinic trial in primary biliary cirrhosis (PBC) of the liver 
+conducted between 1974 and 1984. A description of the clinical background for the trial and the covariates recorded here is in Chapter 0,
+especially Section 0.2. A more extended discussion can be found in Dickson, et al., Hepatology 10:1-7 (1989) and in Markus, et al., N Eng J of Med 320:1709-13 (1989). 
+"A total of 424 PBC patients, referred to Mayo Clinic during that ten-year interval, met eligibility criteria for the randomized placebo controlled 
+trial of the drug D-penicillamine. The first 312 cases in the data set participated in the randomized trial and contain largely complete data." 
+Missing data items are denoted by "." 
+  
+Variables: 
+- case number 
+- number of days between registration and the earlier of death, transplantation, or study analysis time in July, 1986 
+- status 
+- drug: 1= D-penicillamine, 2=placebo 
+- age in days 
+- sex: 0=male, 1=female 
+- presence of ascites: 0=no 1=yes 
+- presence of hepatomegaly: 0=no 1=yes 
+- presence of spiders 0=no 1=yes 
+- presence of edema:
+   0 = no edema and no diuretic therapy for edema; 
+  .5 = edema present without diuretics, or edema resolved by diuretics; 
+   1 = edema despite diuretic therapy 
+- serum bilirubin in mg/dl 
+- serum cholesterol in mg/dl 
+- albumin in gm/dl 
+- urine copper in ug/day 
+- alkaline phosphatase in U/liter 
+- SGOT in U/ml 
+- triglicerides in mg/dl 
+- platelets per cubic ml / 1000 
+- prothrombin time in seconds 
+- histologic stage of disease 
+
+
+==== VA LUNG CANCER (va_lung_cancer.csv)
+fonte: http://www.stat.rice.edu/~sneeley/STAT553/Datasets/survivaldata.txt
+
+Patients with advanced, inoperable lung cancer were treated with chemotherapy. 
+N = 137 
+Veteran's Administration Lung Cancer Trial 
+Taken from Kalbfleisch and Prentice, pages 223-224 
+
+  
+Variables 
+- Treatment: 1=standard, 2=test 
+- Cell type: 1=squamous, 2=small cell, 3=adeno, 4=large 
+- Survival in days 
+- Status: 1=dead, 0=censored 
+- Karnofsky score (measure of general performance, 100=best) 
+- Months from Diagnosis 
+- Age in years 
+- Prior therapy: 0=no, 10=yes 

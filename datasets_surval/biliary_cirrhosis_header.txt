@@ -1,0 +1,1 @@
+ID,survival_time,cens,drug,age,sex,ascites,hepatomegaly,spiders,edema,serum_bilirubin,serum_cholesterol,albumin,urine_copper,alkaline_phosphatase,SGOT,triglicerides,platelets_per_cubic,prothrombin_time,histologic_stage

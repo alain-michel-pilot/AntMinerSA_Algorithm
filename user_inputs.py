@@ -2,13 +2,13 @@
 class UserInputs:   # Define necessary settings
 
     # DATA FILE PATH:
-    header_path = 'datasets_surval/gbsg2_header.txt'
-    data_path = 'datasets_surval/gbsg2.csv'
+    header_path = 'datasets_surval/addicts_header.txt'
+    data_path = 'datasets_surval/addicts.csv'
 
     # DATA ATTRIBUTES DESIGNATION
-    attr_survival_name = 'time'
-    attr_event_name = 'cens'
-    attr_id_name = None
+    attr_survival_name = 'survival_time'
+    attr_event_name = 'status'
+    attr_id_name = 'ID'
     attr_to_ignore = []
 
     # HEURISTIC SETTINGS:
@@ -24,7 +24,7 @@ class UserInputs:   # Define necessary settings
     alpha = 0.05            # alpha value for statistical test confidence
 
     # DISCRETIZER PARAMETERS
-    attr_2disc_names = ['age', 'tsize', 'pnodes', 'progrec', 'estrec']
+    attr_2disc_names = ['methodone_dose']
     save_log = True
     discretization_method = 'KBins'
     # kwargs = [n_bins=, encode=, strategy=]   # insert setting variables for discretizer
